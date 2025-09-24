@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <title>Hội thoại</title>
+  </head>
+  <body>
+    <h1>Danh sách hội thoại</h1>
+    {% if threads %}
+      <ul>
+        {% for t in threads %}
+          <li><a href="{% url 'chat_thread_detail' t.id %}">Hội thoại #{{ t.id }}</a></li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Chưa có hội thoại.</p>
+    {% endif %}
+  </body>
+  </html>
+
+

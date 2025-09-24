@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <title>Danh sách tin</title>
+  </head>
+  <body>
+    <h1>Danh sách tin</h1>
+    {% if items %}
+      <ul>
+        {% for item in items %}
+          <li><a href="{% url 'listing_detail' item.id %}">{{ item.title }}</a></li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Chưa có tin nào.</p>
+    {% endif %}
+    <p><a href="{% url 'listing_create' %}">Đăng tin mới</a></p>
+  </body>
+  </html>
+
+
