@@ -1,0 +1,10 @@
+Xin chao {{ recipient.get_full_name|default:recipient.username }},
+
+{{ sender.get_full_name|default:sender.username }} vua gui ban mot tin nhan moi trong cuoc tro chuyen ve "{{ conversation.listing.title }}".
+
+Trich dan:
+"{{ preview }}"
+
+Mo hop thoai: {{ conversation_url }}
+
+Day la email tu dong, vui long khong tra loi tin nhan nay.

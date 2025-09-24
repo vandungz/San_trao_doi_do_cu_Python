@@ -2,13 +2,55 @@
 <html lang="vi">
   <head>
     <meta charset="utf-8" />
-    <title>Chi tiết tin</title>
+    <title>Tin dang #{{ listing.id }}</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: #f4f5f7;
+        color: #222;
+      }
+      .container {
+        max-width: 768px;
+        margin: 0 auto;
+        padding: 24px 16px;
+        background: #fff;
+      }
+      h1 {
+        margin-bottom: 8px;
+      }
+      .meta {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .actions a {
+        display: inline-block;
+        margin-right: 12px;
+        padding: 8px 12px;
+        background: #0366d6;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 4px;
+      }
+    </style>
   </head>
   <body>
-    <h1>Chi tiết tin #{{ pk }}</h1>
-    <p>Nội dung chi tiết sẽ hiển thị ở đây.</p>
-    <p><a href="/">Trang chủ</a> · <a href="{% url 'listings_list' %}">Danh sách tin</a></p>
+    <main class="container">
+      <h1>{{ listing.title }}</h1>
+      <p class="meta">Nguoi dang: {{ listing.owner.get_full_name|default:listing.owner.username }}</p>
+      <p>{{ listing.description|default:"Chua co mo ta." }}</p>
+      <div class="actions">
+        <a href="/">Trang chu</a>
+        <a href="{% url 'listings_list' %}">Danh sach tin</a>
+        {% if request.user.is_authenticated %}
+          {% if request.user.pk == listing.owner_id %}
+            <a href="{% url 'chat:threads' %}">Hop thu chat</a>
+          {% else %}
+            <a href="{% url 'chat:start_conversation' listing.pk listing.owner_id %}">Nhan nguoi ban</a>
+          {% endif %}
+        {% endif %}
+      </div>
+    </main>
   </body>
-  </html>
-
-
+</html>

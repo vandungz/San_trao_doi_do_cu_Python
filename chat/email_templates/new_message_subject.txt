@@ -1,0 +1,1 @@
+Tin nhan moi tu {{ sender.get_full_name|default:sender.username }} ve "{{ conversation.listing.title }}"
