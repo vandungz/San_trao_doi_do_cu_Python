@@ -190,3 +190,15 @@ python manage.py migrate
 - Email notifications và unit/integration tests theo `docs/`.
 
 
+21) hướng dẫn cài database 
+Đảm bảo DB cs466 đã được tạo:
+
+CREATE DATABASE IF NOT EXISTS cs466
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_0900_ai_ci;
+
+  Chạy:
+python -m pip install mysqlclient
+python manage.py makemigrations
+python manage.py migrate
+python manage.py runserver
