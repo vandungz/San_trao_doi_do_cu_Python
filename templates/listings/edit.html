@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+{% block title %}Chỉnh sửa tin{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <h2>Chỉnh sửa tin</h2>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- Tiêu đề -->
+    <div class="form-group">
+      <label class="form-label">Tiêu đề *</label>
+      {{ form.title|add_class:"form-control"|attr:"placeholder:VD: MacBook Pro 13inch 2020 - Còn mới 99%" }}
+    </div>
+
+    <!-- Mô tả -->
+    <div class="form-group">
+      <label class="form-label">Mô tả chi tiết *</label>
+      {{ form.description|add_class:"form-control"|attr:"placeholder:Mô tả chi tiết về sản phẩm, tình trạng, lý do bán..." }}
+    </div>
+
+    <!-- Danh mục & Tình trạng -->
+    <div class="form-row">
+      <div class="form-group half">
+        <label class="form-label">Danh mục *</label>
+        {{ form.category|add_class:"form-control" }}
+      </div>
+      <div class="form-group half">
+        <label class="form-label">Tình trạng *</label>
+        {{ form.condition|add_class:"form-control" }}
+      </div>
+    </div>
+
+    <!-- Giá & Vị trí -->
+    <div class="form-row">
+      <div class="form-group half">
+        <label class="form-label">Giá bán (VNĐ) *</label>
+        {{ form.price|add_class:"form-control"|attr:"placeholder:0" }}
+      </div>
+      <div class="form-group half">
+        <label class="form-label">Vị trí *</label>
+        {{ form.location|add_class:"form-control"|attr:"placeholder:VD: Tầng 3, Tòa A" }}
+      </div>
+    </div>
+
+    <!-- Ảnh hiện tại -->
+    <h3>Ảnh hiện tại</h3>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px;">
+      {% for img in object.images.all %}
+        <div style="position:relative;">
+          <img src="{{ img.image.url }}" style="width:100px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #ddd;">
+          <a href="{% url 'listings:delete_image' img.id %}" 
+             style="position:absolute;top:-8px;right:-8px;background:red;color:#fff;padding:2px 6px;border-radius:50%;text-decoration:none;font-size:12px;">
+             ×
+          </a>
+        </div>
+      {% empty %}
+        <p>Chưa có ảnh nào.</p>
+      {% endfor %}
+    </div>
+
+    <!-- Thêm ảnh mới -->
+    <h3>Thêm ảnh mới</h3>
+    <div class="upload-box" onclick="document.getElementById('images').click()">
+      <label for="images" class="upload-label" style="cursor:pointer;">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p>Nhấn để tải ảnh mới</p>
+        <span>Tối đa 5 ảnh</span>
+      </label>
+      <input id="images" type="file" name="images" multiple accept="image/*" hidden>
+      <div id="preview" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;"></div>
+    </div>
+
+    <button type="submit" class="btn">Cập nhật</button>
+  </form>
+</div>
+
+<script>
+  const input = document.getElementById('images');
+  const preview = document.getElementById('preview');
+  if (input) {
+    input.addEventListener('change', () => {
+      preview.innerHTML = '';
+      const files = Array.from(input.files).slice(0, 5);
+      if (input.files.length > 5) {
+        alert('Chỉ cho phép tối đa 5 ảnh. Hệ thống sẽ lấy 5 ảnh đầu tiên.');
+      }
+      files.forEach(f => {
+        const url = URL.createObjectURL(f);
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.width = '100px';
+        img.style.height = '80px';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '6px';
+        img.style.border = '1px solid #e5e7eb';
+        preview.appendChild(img);
+      });
+    });
+  }
+</script>
+{% endblock %}

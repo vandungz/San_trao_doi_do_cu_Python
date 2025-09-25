@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Sàn trao đổi đồ cũ nội bộ{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'listings/listings.css' %}">
+    {% load static %}
+<link rel="stylesheet" href="{% static 'listings/forms.css' %}">
+{% load static %}
+<link rel="stylesheet" href="{% static 'baseCss/home.css' %}">
+    <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    rel="stylesheet"
+  />
+    </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1><a href="/" style="color:#111;text-decoration:none;">Sàn trao đổi đồ cũ</a></h1>
+        <nav>
+          <a href="/">Trang chủ</a>
+          <a href="/listings/">Danh sách tin</a>
+          <a href="/chat/"> <i class="fa-solid fa-comment" style="color: #fff;"></i> Chat</a>
+          {% if request.user.is_authenticated %}
+            <a href="/accounts/profile/">Trang cá nhân</a>
+            <a href="/accounts/logout/">Đăng xuất</a>
+          {% else %}
+            <a href="/accounts/login/">Đăng nhập</a>
+            <a href="/accounts/register/">Đăng ký</a>
+          {% endif %}
+          <a href="/admin/">Admin</a>
+        </nav>
+      </header>
+
+      <main>
+        {% block content %}
+        {% endblock %}
+      </main>
+
+      <footer>
+        © 2025 Sàn trao đổi đồ cũ nội bộ
+      </footer>
+    </div>
+  </body>
+</html>

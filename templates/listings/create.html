@@ -1,16 +1,58 @@
-<!doctype html>
-<html lang="vi">
-  <head>
-    <meta charset="utf-8" />
-    <title>Đăng tin</title>
-  </head>
-  <body>
-    <h1>Đăng tin mới</h1>
-    <form>
-      <p>Form đăng tin sẽ được bổ sung sau.</p>
-      <button type="submit" disabled>Đăng</button>
-    </form>
-  </body>
-  </html>
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+{% block title %}Đăng tin mới{% endblock %}
 
+{% block content %}
+<div class="form-container">
+  <h2>Đăng tin mới</h2>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="form-group">
+      {{ form.title|add_class:"form-control"|attr:"placeholder:VD: MacBook Pro 2020 - Còn mới 99%" }}
+    </div>
+    <div class="form-group">
+      {{ form.description|add_class:"form-control"|attr:"placeholder:Mô tả chi tiết..." }}
+    </div>
+    <div class="form-row">
+      <div class="form-group half">{{ form.category|add_class:"form-control" }}</div>
+      <div class="form-group half">{{ form.condition|add_class:"form-control" }}</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group half">{{ form.price|add_class:"form-control"|attr:"placeholder:0" }}</div>
+      <div class="form-group half">{{ form.location|add_class:"form-control"|attr:"placeholder:VD: Tầng 3, Tòa A" }}</div>
+    </div>
 
+    <h3>Hình ảnh *</h3>
+    <div class="upload-box" onclick="document.getElementById('images').click()">
+      <label for="images" class="upload-label" style="cursor:pointer;">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p>Nhấn để tải ảnh lên</p>
+        <span>Tối đa 5 ảnh</span>
+      </label>
+      <input id="images" type="file" name="images" multiple accept="image/*" hidden>
+      <div id="preview" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;"></div>
+    </div>
+
+    <button type="submit" class="btn">Lưu tin</button>
+  </form>
+</div>
+
+<script>
+const input = document.getElementById('images');
+const preview = document.getElementById('preview');
+input.addEventListener('change', () => {
+  preview.innerHTML = '';
+  const files = Array.from(input.files).slice(0,5);
+  if(input.files.length > 5) alert("Chỉ cho phép tối đa 5 ảnh!");
+  files.forEach(f => {
+    const url = URL.createObjectURL(f);
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.width="100px"; img.style.height="80px";
+    img.style.objectFit="cover"; img.style.border="1px solid #ddd";
+    preview.appendChild(img);
+  });
+});
+</script>
+{% endblock %}

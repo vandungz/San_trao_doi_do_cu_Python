@@ -1,22 +1,34 @@
-<!doctype html>
-<html lang="vi">
-  <head>
-    <meta charset="utf-8" />
-    <title>Danh sách tin</title>
-  </head>
-  <body>
-    <h1>Danh sách tin</h1>
-    {% if items %}
-      <ul>
-        {% for item in items %}
-          <li><a href="{% url 'listing_detail' item.id %}">{{ item.title }}</a></li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p>Chưa có tin nào.</p>
-    {% endif %}
-    <p><a href="{% url 'listing_create' %}">Đăng tin mới</a></p>
-  </body>
-  </html>
+{% extends "base.html" %}
+{% block title %}Danh sách tin{% endblock %}
+{% load humanize %}
+{% block content %}
+<h2>Sản Phẩm đang bán</h2>
 
+<p>
+  <a href="{% url 'listings:create' %}" class="btn btn-primary">+ Đăng tin</a>
+  <a href="{% url 'listings:mine' %}" class="btn btn-secondary">Tin của tôi</a>
+</p>
 
+<div class="listings-grid">
+  {% for item in items %}
+    <a href="{{ item.get_absolute_url }}" class="card-link">
+      <div class="card">
+        {% if item.images.first %}
+          <img src="{{ item.images.first.image.url }}" alt="{{ item.title }}" style="width:100%; height:180px; object-fit:cover;">
+        {% else %}
+          <img src="https://via.placeholder.com/250x180.png?text=No+Image" alt="no image">
+        {% endif %}
+
+        <h3>{{ item.title }}</h3>
+        <p class="price" style="color:#030213; font-weight:regular;; font-weight: 400;">
+          {{ item.price|intcomma }}đ
+        </p>
+        <p>{{ item.get_condition_display }}</p>
+        <small>{{ item.created_at|date:"d/m/Y H:i" }}</small>
+      </div>
+    </a>
+  {% empty %}
+    <p>Chưa có tin nào.</p>
+  {% endfor %}
+</div>
+{% endblock %}
