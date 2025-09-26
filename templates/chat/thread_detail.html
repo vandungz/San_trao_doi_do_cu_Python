@@ -1,13 +1,308 @@
+{% load tz %}
 <!doctype html>
 <html lang="vi">
   <head>
     <meta charset="utf-8" />
-    <title>Chi tiết hội thoại</title>
+    <title>Tro chuyen</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: #f4f5f7;
+      }
+      .container {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 24px 16px 80px;
+      }
+      .thread-header {
+        margin-bottom: 16px;
+      }
+      .thread-header h1 {
+        margin: 0 0 4px;
+        font-size: 22px;
+      }
+      .thread-header p {
+        margin: 0;
+        color: #555;
+      }
+      #message-list {
+        list-style: none;
+        margin: 0;
+        padding: 16px;
+        background: #fff;
+        width: 100%;
+        max-height: 60vh;
+        overflow-y: auto;
+        border-radius: 8px;
+        box-shadow: inset 0 0 0 1px #e6e8eb;
+      }
+      .message {
+        max-width: 70%;
+        margin-bottom: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        background: #eef1f7;
+        display: inline-block;
+      }
+      .message--self {
+        background: #d7e8ff;
+        margin-left: auto;
+      }
+      .message--other {
+        margin-right: auto;
+      }
+      .message__meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 4px;
+      }
+      .message__body {
+        font-size: 14px;
+        color: #222;
+        word-break: break-word;
+      }
+      form {
+        margin-top: 16px;
+        background: #fff;
+        padding: 16px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+      textarea {
+        width: 100%;
+        resize: vertical;
+        min-height: 80px;
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid #ccd1d9;
+        font-size: 14px;
+      }
+      button[type="submit"] {
+        margin-top: 12px;
+        background: #0366d6;
+        color: #fff;
+        border: none;
+        padding: 10px 16px;
+        font-size: 14px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      button[type="submit"]:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      #form-errors {
+        margin-top: 8px;
+        color: #b61c1c;
+        font-size: 13px;
+      }
+    </style>
   </head>
   <body>
-    <h1>Hội thoại #{{ pk }}</h1>
-    <div>
-      <p>Tin nhắn sẽ hiển thị ở đây.</p>
-    </div>
+    <main class="container">
+      <div class="thread-header">
+        <h1>Tro chuyen voi {{ partner.get_full_name|default:partner.username }}</h1>
+        <p>Tin dang: {{ conversation.listing.title }}</p>
+      </div>
+      <ul id="message-list">
+        {% include "chat/_message_list.html" with messages=messages %}
+      </ul>
+      <form id="message-form" action="{% url 'chat:thread_send' conversation.pk %}" method="post">
+        {% csrf_token %}
+        <label for="id_body">Tin nhan</label>
+        <textarea name="body" id="id_body" maxlength="2000" required></textarea>
+        <button type="submit">Gui</button>
+        <div id="form-errors" hidden></div>
+      </form>
+    </main>
+    <script>
+      const pollUrl = "{% url 'chat:thread_poll' conversation.pk %}";
+      const messageList = document.getElementById('message-list');
+      const form = document.getElementById('message-form');
+      const errorBox = document.getElementById('form-errors');
+      let lastTs = "{{ last_message_ts }}";
+
+      function isNearBottom() {
+        return messageList.scrollHeight - messageList.scrollTop - messageList.clientHeight < 80;
+      }
+
+      function scrollToBottom(force) {
+        if (force || isNearBottom()) {
+          messageList.scrollTop = messageList.scrollHeight;
+        }
+      }
+
+      function fragmentFromText(text) {
+        const fragment = document.createDocumentFragment();
+        const parts = text.split('\n');
+        parts.forEach((part, index) => {
+          fragment.appendChild(document.createTextNode(part));
+          if (index < parts.length - 1) {
+            fragment.appendChild(document.createElement('br'));
+          }
+        });
+        return fragment;
+      }
+
+      function renderPayloadMessage(payload) {
+        const exists = messageList.querySelector(`[data-message-id="${payload.id}"]`);
+        if (exists) {
+          return;
+        }
+        const item = document.createElement('li');
+        item.className = `message ${payload.is_self ? 'message--self' : 'message--other'}`;
+        item.dataset.messageId = payload.id;
+        item.dataset.created = payload.created_at;
+
+        const meta = document.createElement('div');
+        meta.className = 'message__meta';
+        const sender = document.createElement('span');
+        sender.className = 'message__sender';
+        sender.textContent = payload.is_self ? 'Ban' : payload.sender_display;
+        const time = document.createElement('span');
+        time.className = 'message__time';
+        time.textContent = new Date(payload.created_at).toLocaleString('vi-VN');
+        meta.appendChild(sender);
+        meta.appendChild(time);
+
+        const body = document.createElement('div');
+        body.className = 'message__body';
+        body.appendChild(fragmentFromText(payload.body));
+
+        item.appendChild(meta);
+        item.appendChild(body);
+        messageList.appendChild(item);
+      }
+
+      function appendHtmlMessages(html) {
+        if (!html.trim()) {
+          return;
+        }
+        const template = document.createElement('template');
+        template.innerHTML = html.trim();
+        const nodes = Array.from(template.content.children);
+        nodes.forEach(node => messageList.appendChild(node));
+        const newest = nodes[nodes.length - 1];
+        if (newest) {
+          lastTs = newest.dataset.created;
+        }
+      }
+
+      async function poll() {
+        const params = lastTs ? `?after=${encodeURIComponent(lastTs)}` : '';
+        const response = await fetch(`${pollUrl}${params}`, {
+          headers: {
+            'Accept': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          return;
+        }
+        const data = await response.json();
+        if (!data.messages || !data.messages.length) {
+          return;
+        }
+        const shouldStick = isNearBottom();
+        data.messages.forEach(renderPayloadMessage);
+        lastTs = data.last_ts;
+        if (shouldStick) {
+          scrollToBottom(true);
+        }
+      }
+
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+          return parts.pop().split(';').shift();
+        }
+        return '';
+      }
+
+      function clearErrors() {
+        if (!errorBox) {
+          return;
+        }
+        errorBox.hidden = true;
+        errorBox.innerHTML = '';
+      }
+
+      function showErrors(errors) {
+        if (!errorBox) {
+          return;
+        }
+        errorBox.innerHTML = '';
+        const items = Object.values(errors || {}).flat();
+        if (!items.length) {
+          return;
+        }
+        const ul = document.createElement('ul');
+        items.forEach(text => {
+          const li = document.createElement('li');
+          li.textContent = text;
+          ul.appendChild(li);
+        });
+        errorBox.appendChild(ul);
+        errorBox.hidden = false;
+      }
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        clearErrors();
+        const formData = new FormData(form);
+        const rawText = formData.get('body');
+        if (!rawText || !rawText.toString().trim()) {
+          showErrors({ body: ['Noi dung khong duoc de trong.'] });
+          return;
+        }
+        const shouldStick = isNearBottom();
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: {
+            'Accept': 'text/html',
+            'HX-Request': 'true',
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
+          body: formData,
+        });
+        if (response.status === 201) {
+          const html = await response.text();
+          appendHtmlMessages(html);
+          const headerTs = response.headers.get('X-Last-Timestamp');
+          if (headerTs) {
+            lastTs = headerTs;
+          }
+          form.reset();
+          if (shouldStick) {
+            scrollToBottom(true);
+          }
+        } else if (response.status === 400) {
+          const data = await response.json().catch(() => null);
+          if (data) {
+            showErrors(data.errors);
+          }
+        }
+      });
+
+      form.addEventListener('input', clearErrors);
+
+      if (!lastTs) {
+        const lastNode = messageList.lastElementChild;
+        if (lastNode) {
+          lastTs = lastNode.dataset.created;
+        }
+      }
+
+      scrollToBottom(true);
+      setInterval(poll, 7000);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          poll();
+        }
+      });
+    </script>
   </body>
   </html>
