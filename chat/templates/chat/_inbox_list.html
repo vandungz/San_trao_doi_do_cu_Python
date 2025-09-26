@@ -1,0 +1,28 @@
+{% for convo in conversations %}
+  <a href="{% url 'chat:thread_detail' convo.id %}"
+     class="conversation-item {% if convo.id == active_id %}active{% endif %}">
+    <div class="conversation-avatar">
+      {{ convo.other_user.get_full_name|default:convo.other_user.username|first|upper }}
+    </div>
+    <div class="conversation-content">
+      <div class="conversation-name">
+        {{ convo.other_user.get_full_name|default:convo.other_user.username }}
+      </div>
+      <div class="conversation-preview">
+        {% if convo.last_message_obj %}{{ convo.last_message_obj.body|truncatechars:50 }}{% else %}Chưa có tin nhắn{% endif %}
+      </div>
+    </div>
+    <div class="conversation-meta">
+      {% if convo.last_message_obj %}
+        <div class="conversation-time">{{ convo.last_message_obj.created_at|date:"H:i" }}</div>
+      {% endif %}
+      {% if convo.unread_total %}
+        <div class="unread-badge">{{ convo.unread_total }}</div>
+      {% endif %}
+    </div>
+  </a>
+{% empty %}
+  <div class="conversation-item text-muted text-center">Không có cuộc trò chuyện</div>
+{% endfor %}
+
+
