@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Xác thực OTP</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: #fff;
+      padding: 40px 50px;
+      border-radius: 10px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      width: 400px;
+      max-width: 90%;
+      text-align: center;
+    }
+
+    h2 {
+      color: #1877f2;
+      margin-bottom: 20px;
+    }
+
+    .error {
+      color: red;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+      text-align: center;
+      letter-spacing: 3px;
+    }
+
+    button {
+      background: #1877f2;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+      width: 100%;
+    }
+
+    button:hover {
+      background: #145db2;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Xác thực OTP</h2>
+
+    {% if error %}
+      <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <input type="text" name="otp" placeholder="Nhập mã 6 số" maxlength="6">
+      <button type="submit">Xác thực</button>
+    </form>
+  </div>
+</body>
+</html>

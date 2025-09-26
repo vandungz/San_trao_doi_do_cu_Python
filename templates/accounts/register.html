@@ -1,18 +1,117 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
-  <head>
-    <meta charset="utf-8" />
-    <title>Đăng ký</title>
-  </head>
-  <body>
-    <h1>Đăng ký</h1>
+<head>
+  <meta charset="UTF-8">
+  <title>Đăng ký</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: #fff;
+      padding: 30px 40px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 380px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #1877f2;
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #dddfe2;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .error-msg {
+      color: #d93025;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      background: #1877f2;
+      color: #fff;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #166fe5;
+    }
+
+    .link {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .link a {
+      color: #1877f2;
+      text-decoration: none;
+    }
+
+    .link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Tạo tài khoản</h2>
     <form method="post">
       {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit">Tạo tài khoản</button>
+
+      <label for="{{ form.username.id_for_label }}">Tên đăng nhập</label>
+      {{ form.username }}
+      {% for error in form.username.errors %}
+        <div class="error-msg">{{ error }}</div>
+      {% endfor %}
+
+      <label for="{{ form.password1.id_for_label }}">Mật khẩu</label>
+      {{ form.password1 }}
+      {% for error in form.password1.errors %}
+        <div class="error-msg">{{ error }}</div>
+      {% endfor %}
+
+      <label for="{{ form.password2.id_for_label }}">Xác nhận mật khẩu</label>
+      {{ form.password2 }}
+      {% for error in form.password2.errors %}
+        <div class="error-msg">{{ error }}</div>
+      {% endfor %}
+
+      <button type="submit">Đăng ký</button>
     </form>
-    <p>Đã có tài khoản? <a href="{% url 'login' %}">Đăng nhập</a></p>
-  </body>
-  </html>
 
-
+    <div class="link">
+      <p>Đã có tài khoản? <a href="{% url 'login' %}">Đăng nhập</a></p>
+    </div>
+  </div>
+</body>
+</html>
