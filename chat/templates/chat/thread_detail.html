@@ -1,0 +1,124 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Messenger</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'chat/chat.css' %}">
+</head>
+<body class="messenger-body">
+<div class="messenger-container">
+  <!-- Left Sidebar - Inbox -->
+  <div class="messenger-sidebar">
+    <div class="sidebar-header">
+      <h4 class="mb-0">Đoạn chat</h4>
+      <div class="search-box">
+        <input type="text" class="form-control" placeholder="Tìm kiếm trên Messenger">
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active">Tất cả</button>
+        <button class="tab-btn">Chưa đọc</button>
+        <button class="tab-btn">Nhóm</button>
+      </div>
+    </div>
+    <div class="conversations-list">
+      {% include 'chat/_inbox_list.html' with conversations=inbox_conversations active_id=conversation.id %}
+    </div>
+  </div>
+
+  <!-- Right Content - Chat Thread -->
+  <div class="messenger-main">
+    <div class="chat-header">
+      <div class="chat-user-info">
+        <div class="user-avatar">
+          <div class="avatar-circle">{{ partner.get_full_name|default:partner.username|first|upper }}</div>
+        </div>
+        <div class="user-details">
+          <h6 class="mb-0">{{ partner.get_full_name|default:partner.username }}</h6>
+          <small class="text-muted">{{ conversation.listing.title }}</small>
+        </div>
+      </div>
+      <div class="chat-actions">
+        <button class="action-btn"><i class="bi bi-camera-video"></i></button>
+        <button class="action-btn"><i class="bi bi-telephone"></i></button>
+        <button class="action-btn"><i class="bi bi-info-circle"></i></button>
+      </div>
+    </div>
+    
+    <div id="messages-scroll" class="chat-messages" data-last-ts="{{ last_message_ts }}">
+      {% if messages %}
+        <div class="messages-container">
+          {% for message in messages %}
+            {% include 'chat/_message_row.html' with message=message %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-chat">
+          <div class="empty-icon">💬</div>
+          <p>Chưa có tin nhắn</p>
+        </div>
+      {% endif %}
+    </div>
+    
+    <div class="chat-input">
+      <form method="post" action="{% url 'chat:thread_send' conversation.id %}" id="message-form">
+        {% csrf_token %}
+        <div class="input-group">
+          <button type="button" class="input-btn"><i class="bi bi-emoji-smile"></i></button>
+          <button type="button" class="input-btn"><i class="bi bi-paperclip"></i></button>
+          <div class="message-input-wrapper">
+            {{ form.body.as_widget|safe }}
+          </div>
+          <button type="button" class="input-btn"><i class="bi bi-mic"></i></button>
+          <button type="submit" class="send-btn">
+            <i class="bi bi-send"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const scrollBox = document.getElementById('messages-scroll');
+    function scrollToBottom() { if (!scrollBox) return; scrollBox.scrollTop = scrollBox.scrollHeight; }
+    // Auto scroll on load
+    window.addEventListener('load', scrollToBottom);
+
+    // Auto-resize textarea and Ctrl+Enter to submit
+    const form = document.getElementById('message-form');
+    const textarea = form ? form.querySelector('textarea') : null;
+    function autoResize() {
+      if (!textarea) return;
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 300) + 'px';
+    }
+    if (textarea) {
+      textarea.addEventListener('input', autoResize);
+      autoResize();
+      textarea.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'Enter') {
+          form.submit();
+        }
+      });
+    }
+
+    // Clear textarea after submit and keep bottom
+    if (form) {
+      form.addEventListener('submit', function() {
+        setTimeout(function(){
+          if (textarea) { textarea.value = ''; autoResize(); }
+          scrollToBottom();
+        }, 0);
+      });
+    }
+  })();
+</script>
+</body>
+</html>
+
+

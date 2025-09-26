@@ -63,7 +63,7 @@ def _prefetch_last_message(qs):
 
 def _get_messages_page(conversation: Conversation, page_number: Optional[str]):
     qs = conversation.messages.select_related("sender").order_by("created_at")
-    paginator = Paginator(qs, 25)
+    paginator = Paginator(qs, 30)
     if not page_number:
         page_number = paginator.num_pages or 1
     try:
@@ -114,6 +114,21 @@ def thread_detail_view(request: HttpRequest, pk: int) -> HttpResponse:
         return HttpResponseForbidden("Ban khong co quyen truy cap cuoc tro chuyen nay.")
 
     partner = conversation.other_participant(request.user)
+    # Build inbox (left column) conversations list
+    inbox_qs = (
+        Conversation.objects.for_user(request.user)
+        .select_related("listing", "buyer", "seller")
+        .annotate(last_message_at=Max("messages__created_at"))
+        .order_by("-last_message_at", "-created_at")
+    )
+    inbox_qs = _prefetch_last_message(inbox_qs)
+    unread_map = unread_count_by_conversation(request.user)
+    inbox_conversations = list(inbox_qs[:50])
+    for convo in inbox_conversations:
+        convo.other_user = convo.other_participant(request.user)
+        convo.unread_total = unread_map.get(convo.pk, 0)
+        convo.last_message_obj = convo.last_message
+
     page_number = request.GET.get("page")
     page_obj = _get_messages_page(conversation, page_number)
 
@@ -121,8 +136,14 @@ def thread_detail_view(request: HttpRequest, pk: int) -> HttpResponse:
 
     last_message_ts = ""
     if page_obj.object_list:
-        last_created = page_obj.object_list[-1].created_at
-        last_message_ts = timezone.localtime(last_created).isoformat()
+        # Fix negative indexing on QuerySet in Django 5.2 (avoid [-1])
+        # Convert to list to avoid "Cannot reorder a query once a slice has been taken"
+        messages_list = list(page_obj.object_list)
+        if messages_list:
+            last_obj = messages_list[-1]
+            last_created = getattr(last_obj, "created_at", None)
+            if last_created:
+                last_message_ts = timezone.localtime(last_created).isoformat()
 
     form = MessageForm()
 
@@ -133,6 +154,7 @@ def thread_detail_view(request: HttpRequest, pk: int) -> HttpResponse:
         "messages": page_obj.object_list,
         "form": form,
         "last_message_ts": last_message_ts,
+        "inbox_conversations": inbox_conversations,
     }
     return render(request, "chat/thread_detail.html", context)
 
