@@ -43,7 +43,7 @@ def verify_otp(request: HttpRequest) -> HttpResponse:
         if totp.verify(code, valid_window=1):
             login(request, user)
             del request.session["pre_2fa_user_id"]
-            return redirect("profile")
+            return redirect("home")
         else:
             return render(request, "accounts/verify_otp.html", {"error": "Mã OTP không hợp lệ"})
 

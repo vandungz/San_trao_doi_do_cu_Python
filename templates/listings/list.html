@@ -4,10 +4,42 @@
 {% block content %}
 <h2>Sản Phẩm đang bán</h2>
 
-<p>
-  <a href="{% url 'listings:create' %}" class="btn btn-primary">+ Đăng tin</a>
-  <a href="{% url 'listings:mine' %}" class="btn btn-secondary">Tin của tôi</a>
-</p>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    
+    <div class="d-flex align-items-center">
+        <p>
+          <a href="{% url 'listings:create' %}" class="btn btn-primary">+ Đăng tin</a>
+          <a href="{% url 'listings:mine' %}" class="btn btn-secondary">Tin của tôi</a>
+        </p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+        
+        <form method="GET" action="{% url 'listings:list' %}" class="d-flex me-2"style="border: none !important; box-shadow: none !important; background-color: transparent !important; padding: 0 !important;">
+            {% for key, value in request.GET.items %}
+                {% if key != 'q' %}
+                    <input type="hidden" name="{{ key }}" value="{{ value }}">
+                {% endif %}
+            {% endfor %}
+
+            <input type="text" 
+                   name="q" 
+                   placeholder="Nhập tên món hàng..." 
+                   class="form-control no-border-search" 
+                   style="width: 250px;"
+                   value="{{ request.GET.q|default:'' }}">
+            <button type="submit" class="btn btn-primary ms-2">
+                <i class="fas fa-search"></i> Tìm kiếm
+            </button>
+        </form>
+
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
+            <i class="fas fa-filter"></i> Bộ Lọc
+        </button>
+    </div>
+</div>
+<hr>
 
 <div class="listings-grid">
   {% for item in items %}
@@ -30,5 +62,85 @@
   {% empty %}
     <p>Chưa có tin nào.</p>
   {% endfor %}
+</div>
+
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form method="GET" action="{% url 'listings:list' %}">
+        
+        <div class="modal-header">
+          <h5 class="modal-title" id="filterModalLabel"><i class="fas fa-sliders-h"></i> Tùy chọn Lọc</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        
+        <div class="modal-body">
+            
+            {% if request.GET.q %}
+                <input type="hidden" name="q" value="{{ request.GET.q }}">
+            {% endif %}
+
+            <div class="mb-3">
+                <label for="modal_category" class="form-label">Danh mục</label>
+                <select name="category" id="modal_category" class="form-select">
+                    <option value="">-- Tất cả Danh mục --</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.slug }}" 
+                                {% if request.GET.category == cat.slug %}selected{% endif %}>
+                            {{ cat.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="modal_condition" class="form-label">Tình trạng</label>
+                <select name="condition" id="modal_condition" class="form-select">
+                    <option value="">-- Bất kỳ Tình trạng --</option>
+                    {% for key, display in conditions_choices %}
+                        <option value="{{ key }}" 
+                                {% if request.GET.condition == key %}selected{% endif %}>
+                            {{ display }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Khoảng Giá (VND)</label>
+                <div class="d-flex align-items-center gap-2">
+                    <input type="number" name="price_min" placeholder="Từ" class="form-control" 
+                           value="{{ request.GET.price_min|default:'' }}">
+                    <span>đến</span>
+                    <input type="number" name="price_max" placeholder="Đến" class="form-control" 
+                           value="{{ request.GET.price_max|default:'' }}">
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="modal_sort" class="form-label">Sắp xếp theo</label>
+                <select name="sort" id="modal_sort" class="form-select">
+                    {% with current_sort=request.GET.sort|default:'newest' %}
+                        <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Mới nhất</option>
+                        <option value="price_asc" {% if current_sort == 'price_asc' %}selected{% endif %}>Giá tăng dần</option>
+                        <option value="price_desc" {% if current_sort == 'price_desc' %}selected{% endif %}>Giá giảm dần</option>
+                    {% endwith %}
+                </select>
+            </div>
+            
+        </div>
+        
+        <div class="modal-footer">
+          <a href="{% url 'listings:list' %}" class="btn btn-outline-secondary me-auto">
+              <i class="fas fa-times"></i> Xóa Lọc
+          </a>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+          <button type="submit" class="btn btn-success">
+              <i class="fas fa-check"></i> Áp dụng Lọc
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 {% endblock %}
