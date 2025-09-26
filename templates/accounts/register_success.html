@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Đăng ký thành công</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: #fff;
+      padding: 40px 50px;
+      border-radius: 10px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      width: 500px;
+      max-width: 90%;
+      text-align: center;
+    }
+
+    h2 {
+      color: #1877f2;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 16px;
+      margin: 10px 0;
+    }
+
+    img {
+      margin: 20px 0;
+      width: 220px;
+      height: 220px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      padding: 8px;
+      background: #fff;
+    }
+
+    a.button {
+      display: inline-block;
+      margin-top: 20px;
+      background: #1877f2;
+      color: #fff;
+      padding: 14px 20px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+
+    a.button:hover {
+      background: #145db2;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🎉 Đăng ký thành công!</h2>
+    <p>Quét mã QR bằng <b>Google Authenticator</b> để kích hoạt bảo mật 2 lớp:</p>
+    <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code">
+    <br>
+    <a href="{% url 'login' %}" class="button">Đi tới đăng nhập</a>
+  </div>
+</body>
+</html>

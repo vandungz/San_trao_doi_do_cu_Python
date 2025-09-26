@@ -8,5 +8,3 @@ def thread_list(request: HttpRequest) -> HttpResponse:
 
 def thread_detail(request: HttpRequest, pk: int) -> HttpResponse:
     return render(request, "chat/thread_detail.html", {"pk": pk})
-
-

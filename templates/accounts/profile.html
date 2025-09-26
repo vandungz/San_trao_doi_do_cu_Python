@@ -1,14 +1,85 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
-  <head>
-    <meta charset="utf-8" />
-    <title>Trang cá nhân</title>
-  </head>
-  <body>
+<head>
+  <meta charset="UTF-8">
+  <title>Trang cá nhân</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: #fff;
+      padding: 40px 50px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      width: 420px;
+      max-width: 95%;
+      text-align: center;
+    }
+
+    h1 {
+      color: #1877f2;
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 16px;
+      margin: 8px 0 20px;
+      color: #333;
+    }
+
+    a {
+      display: inline-block;
+      margin-top: 10px;
+      color: #1877f2;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .btn-logout {
+      background: #e53935;
+      color: #fff;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 20px;
+      transition: background 0.2s;
+      font-weight: bold;
+    }
+
+    .btn-logout:hover {
+      background: #c62828;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
     <h1>Xin chào, {{ request.user.username }}</h1>
-    <p>Đây là trang cá nhân của bạn.</p>
-    <p><a href="/">Về trang chủ</a></p>
-  </body>
-  </html>
+    <p>Chúc bạn một ngày vui vẻ 🎉</p>
 
+    <a href="/">← Về trang chủ</a>
 
+    <!-- Nút Đăng xuất -->
+    <form action="{% url 'logout' %}" method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn-logout">Đăng xuất</button>
+    </form>
+  </div>
+</body>
+</html>
