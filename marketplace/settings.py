@@ -18,10 +18,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",
     # Local apps
     "accounts",
-    "listings",
+    
     "chat",
+     # thêm dòng này để bật widget_tweaks
+    "widget_tweaks",
 ]
 
 MIDDLEWARE = [
@@ -69,7 +72,24 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+# == MEDIA ==
+from pathlib import Path
+import os
+BASE_DIR = Path(__file__).resolve().parent.parent
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Listings config (tùy chọn)
+LISTINGS_PUBLIC_READ = True
+LISTINGS_PAGE_SIZE = 12
+
+INSTALLED_APPS += [
+    'listings',
+]
+
+# Pillow để xử lý ImageField
+# pip install Pillow
 
 LANGUAGE_CODE = "vi"
 TIME_ZONE = "Asia/Ho_Chi_Minh"
@@ -82,3 +102,9 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else []
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+import os
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+

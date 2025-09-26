@@ -1,53 +1,69 @@
-<!doctype html>
-<html lang="vi">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sàn trao đổi đồ cũ nội bộ</title>
-    <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
-      .container { max-width: 900px; margin: 0 auto; }
-      header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
-      a { color: #0d6efd; text-decoration: none; }
-      a:hover { text-decoration: underline; }
-      .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <header>
-        <h1>Sàn trao đổi đồ cũ nội bộ</h1>
-        <nav>
-          <a href="/">Trang chủ</a>
-          · <a href="/admin/">Admin</a>
-          · <a href="/listings/">Danh sách tin</a>
-          · <a href="/chat/">Chat</a>
-          ·
-          {% if request.user.is_authenticated %}
-            <a href="/accounts/profile/">Trang cá nhân</a>
-          {% else %}
-            <a href="/accounts/login/">Đăng nhập</a> / <a href="/accounts/register/">Đăng ký</a>
-          {% endif %}
-        </nav>
-      </header>
-      <div class="card">
-        <p>Skeleton Django đã sẵn sàng. Bắt đầu phát triển các tính năng theo tài liệu trong thư mục <code>docs/</code>.</p>
-        <p>Liên kết nhanh:</p>
-        <ul>
-          <li><a href="/listings/">Xem danh sách tin</a></li>
-          <li><a href="/listings/create/">Đăng tin mới</a></li>
-          <li><a href="/chat/">Danh sách hội thoại</a></li>
-          <li>
-            {% if request.user.is_authenticated %}
-              <a href="/accounts/profile/">Trang cá nhân</a>
-            {% else %}
-              <a href="/accounts/login/">Đăng nhập</a> / <a href="/accounts/register/">Đăng ký</a>
-            {% endif %}
-          </li>
-        </ul>
-      </div>
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sàn Trao Đổi Nội Bộ{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+  <div class="hero-content">
+    
+    <h1>
+      Kết nối đồ cũ,<br />
+      <span class="highlight">Tạo giá trị mới</span>
+    </h1>
+    <p class="subtitle">
+      Nền tảng trao đổi đồ cũ dành riêng cho nhân viên công ty.  
+      Tìm kiếm những món đồ hữu ích từ đồng nghiệp, chia sẻ những gì bạn không còn sử dụng.
+    </p>
+    <div class="hero-buttons">
+      <a href="{% url 'listings:list' %}" class="btn btn-primary">Khám phá ngay <i class="fa-solid fa-arrow-right"></i></a>
+      <a href="{% url 'listings:create' %}" class="btn btn-outline">Đăng tin bán đồ</a>
     </div>
-  </body>
-  </html>
+  </div>
 
+  <div class="hero-image">
+    <img src="{% static 'images/hero.jpg' %}" alt="Hero Banner" />
+    
+  </div>
+</div>
+<section class="features">
+  <h2 class="features-title">Tại sao chọn chúng tôi?</h2>
+  <p class="features-subtitle">
+    Trải nghiệm mua bán đồ cũ an toàn, tiện lợi và thân thiện với môi trường
+  </p>
 
+  <div class="features-grid">
+    <div class="feature-item">
+      <div class="feature-icon">
+        <i class="fas fa-shield-alt"></i>
+      </div>
+      <h3>An toàn nội bộ</h3>
+      <p>Chỉ dành cho nhân viên công ty, giao dịch tin cậy</p>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-icon">
+        <i class="fas fa-comment-dots"></i>
+      </div>
+      <h3>Chat trực tiếp</h3>
+      <p>Nhắn tin trực tiếp với người bán qua nền tảng</p>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-icon">
+        <i class="fas fa-bolt"></i>
+      </div>
+      <h3>Giao dịch nhanh</h3>
+      <p>Gặp gỡ ngay tại văn phòng, thanh toán dễ dàng</p>
+    </div>
+
+    <div class="feature-item">
+      <div class="feature-icon">
+        <i class="fas fa-recycle"></i>
+      </div>
+      <h3>Tái sử dụng</h3>
+      <p>Giúp đồ cũ có chủ mới, bảo vệ môi trường</p>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Xóa tin{% endblock %}
+{% load humanize %}
+{% block content %}
+  <h2>Xóa tin</h2>
+  
+  <div class="form" style="max-width: 400px; text-align: center;">
+    <p style="font-size: 1.1rem;">Bạn chắc chắn muốn <strong>xóa</strong> tin "<strong>{{ object.title }}</strong>"?</p>
+    
+    <form method="post">{% csrf_token %}
+      <button type="submit" class="btn" style="background: #dc2626;">Xóa</button>
+      <a href="{% url 'listings:detail' object.pk %}" class="btn" style="background: #6b7280; margin-left: 10px;">Hủy</a>
+    </form>
+  </div>
+{% endblock %}

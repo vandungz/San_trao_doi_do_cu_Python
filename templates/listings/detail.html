@@ -1,14 +1,90 @@
-<!doctype html>
-<html lang="vi">
-  <head>
-    <meta charset="utf-8" />
-    <title>Chi tiết tin</title>
-  </head>
-  <body>
-    <h1>Chi tiết tin #{{ pk }}</h1>
-    <p>Nội dung chi tiết sẽ hiển thị ở đây.</p>
-    <p><a href="/">Trang chủ</a> · <a href="{% url 'listings_list' %}">Danh sách tin</a></p>
-  </body>
-  </html>
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
 
+{% block title %}{{ item.title }}{% endblock %}
 
+{% block content %}
+<a href="{% url 'listings:list' %}" style="color: #2563eb; text-decoration: none;">
+  <i class="fa-solid fa-arrow-left"></i>
+  Quay lại danh sách</a>
+<h1 style="margin-top: 10px;">{{ item.title }}</h1>
+
+<div style="display:flex; gap: 30px; margin-top: 20px;">
+  <!-- Ảnh sản phẩm -->
+  <div style="flex: 2;">
+    <!-- Ảnh chính -->
+    {% if item.images.all %}
+      <img id="main-image" 
+           src="{{ item.images.first.image.url }}" 
+           alt="{{ item.images.first.alt_text|default:item.title }}"
+           style="width:100%; border-radius:8px; object-fit:cover;height: 367px; background:#f3f4f6; margin-bottom: 15px;">
+    {% else %}
+      <div style="aspect-ratio:4/3; background:#e5e7eb; border-radius:8px;"></div>
+    {% endif %}
+
+    <!-- Thumbnail -->
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      {% for img in item.images.all %}
+        <img src="{{ img.image.url }}" 
+             alt="{{ img.alt_text|default:item.title }}"
+             onclick="document.getElementById('main-image').src=this.src"
+             style="width:100px; height:80px; object-fit:cover; border-radius:6px; cursor:pointer; border:1px solid #ddd;">
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Thông tin sản phẩm -->
+  <div style="flex: 1; padding: 20px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; align-self: flex-start;">
+    <!-- Giá -->
+    <div class="price" style="font-size: 1.5rem; margin-bottom: 10px; color:#2563eb; font-weight:bold;">
+      {{ item.price|intcomma }} đ
+    </div>
+
+    <!-- Tình trạng -->
+    <span style="display:inline-block; padding: 4px 10px; border-radius: 6px; background:#eef2ff; color:#2563eb; font-weight: 500; font-size: 0.9rem; margin-bottom: 15px;">
+      {{ item.get_condition_display }}
+    </span>
+
+    <!-- Mô tả -->
+    <p style="white-space:pre-wrap; border-top: 1px solid #e5e7eb; padding-top: 15px;">{{ item.description }}</p>
+
+    <!-- Thông tin thêm -->
+    <div style="font-size: 0.95rem; color: #4b5563;">
+      <p style="margin: 5px 0;"><strong>Danh mục:</strong> {{ item.category.name }}</p>
+      <p style="margin: 5px 0;"><strong>Vị trí:</strong> {{ item.location|default:"(Không rõ)" }}</p>
+      <p style="margin: 5px 0;"><strong>Đăng bởi:</strong> {{ item.owner.get_username }}</p>
+    </div>
+
+    <!-- Các nút hành động -->
+    <div style="margin-top: 20px; border-top: 1px solid #e5e7eb; padding-top: 15px;">
+      {% if user.is_authenticated %}
+        {% if user.id == item.owner_id or user.is_staff %}
+          <!-- Chủ sở hữu hoặc admin -->
+          <p>
+            <a href="{% url 'listings:edit' item.pk %}" class="btn" style="padding: 6px 12px; font-size: 0.9rem;">Sửa</a>
+            <a href="{% url 'listings:delete' item.pk %}" class="btn" style="background: #dc2626; padding: 6px 12px; font-size: 0.9rem; margin-left: 10px;">Xóa</a>
+          </p>
+
+          <!-- Admin duyệt tin -->
+          {% if user.is_staff and item.status == 'PENDING' %}
+            <form action="{% url 'listings:publish' item.pk %}" method="post" style="margin-top: 10px;">
+              {% csrf_token %}
+              <button type="submit" class="btn" style="background: #059669;">Duyệt & Đăng</button>
+            </form>
+          {% endif %}
+        {% endif %}
+
+        <!-- Nút nhắn tin cho user khác (kể cả admin khi không phải chủ tin) -->
+        {% if user.id != item.owner_id %}
+          <p>
+            <a href="/chat/thread/{{ item.pk }}/" class="btn" style="background: #2563eb; color:#fff; padding: 6px 12px; font-size: 0.9rem; text-decoration:none;">
+              💬 Nhắn tin với người bán
+            </a>
+          </p>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock content %}
