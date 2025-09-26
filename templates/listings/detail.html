@@ -78,7 +78,7 @@
         <!-- Nút nhắn tin cho user khác (kể cả admin khi không phải chủ tin) -->
         {% if user.id != item.owner_id %}
           <p>
-            <a href="/chat/thread/{{ item.pk }}/" class="btn" style="background: #2563eb; color:#fff; padding: 6px 12px; font-size: 0.9rem; text-decoration:none;">
+            <a href="{% url 'chat:start_conversation' item.pk item.owner_id %}" class="btn" style="background: #2563eb; color:#fff; padding: 6px 12px; font-size: 0.9rem; text-decoration:none;">
               💬 Nhắn tin với người bán
             </a>
           </p>
