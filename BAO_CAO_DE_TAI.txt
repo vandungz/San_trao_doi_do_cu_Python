@@ -56,34 +56,34 @@ CHƯƠNG 2. PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG SÀN TRAO ĐỔI ĐỒ CŨ
 
 2.1 Nội dung tìm hiểu:
 
-2.1.1 Thành viên 1: Phân tích yêu cầu và kiến trúc hệ thống
+2.1.1 Nguyễn Văn Dũng: Phân tích yêu cầu và kiến trúc hệ thống
 - Nghiên cứu yêu cầu chức năng và phi chức năng
 - Thiết kế kiến trúc tổng thể của hệ thống
 - Lựa chọn công nghệ phù hợp
 - Xác định các ràng buộc và giới hạn
 
-2.1.2 Thành viên 2: Thiết kế mô hình dữ liệu và cơ sở dữ liệu
+2.1.2 Trần Duy Hảo: Thiết kế mô hình dữ liệu và cơ sở dữ liệu và chat
 - Phân tích các thực thể và mối quan hệ
 - Thiết kế ERD (Entity Relationship Diagram)
 - Xác định các ràng buộc toàn vẹn dữ liệu
 - Tối ưu hóa hiệu suất truy vấn
+- Chat 1-1 giữa người mua và người bán
 
-2.1.3 Thành viên 3: Phát triển tính năng xác thực và quản lý người dùng
+2.1.3 Ngô Thị Tuyết Nhung: Phát triển tính năng xác thực và quản lý người dùng
 - Thiết kế hệ thống đăng ký/đăng nhập
 - Xác thực OTP qua email
 - Quản lý hồ sơ người dùng
 - Bảo mật session và CSRF protection
 
-2.1.4 Thành viên 4: Phát triển tính năng đăng tin và quản lý sản phẩm
+2.1.4 Ngô Nguyễn Trường An: Phát triển tính năng đăng tin và quản lý sản phẩm
 - Thiết kế form đăng tin với validation
 - Upload và quản lý ảnh sản phẩm
 - Hệ thống duyệt tin (PENDING → PUBLISHED)
 - Quản lý danh mục sản phẩm
 
-2.1.5 Thành viên 5: Phát triển tính năng tìm kiếm và chat
+2.1.5 Huỳnh Thị Mỹ Duyên: Phát triển tính năng tìm kiếm và bộ lọc
 - Hệ thống tìm kiếm theo từ khóa, danh mục, giá
 - Lọc và sắp xếp kết quả
-- Chat 1-1 giữa người mua và người bán
 
 2.2 Kết luận chương 2
 - Hệ thống được thiết kế với kiến trúc đơn giản, dễ mở rộng
@@ -105,7 +105,7 @@ Công cụ sử dụng: Python 3.10+, Django 5.2.6, SQLite, Bootstrap 5.3.3, pyt
 
 Các bước triển khai:
 
-3.1.1 Kịch Bản 1 (Thực hiện: Thành viên 1): Thiết lập môi trường phát triển
+3.1.1 Kịch Bản 1 (Thực hiện: Nguyễn Văn Dũng): Thiết lập môi trường phát triển
 a. Mô tả chi tiết về tình trạng khi chưa triển khai:
 - Chưa có môi trường phát triển
 - Chưa cài đặt các công cụ cần thiết
@@ -126,11 +126,12 @@ c. Kết quả và phân tích:
 
 d. Kết luận: Môi trường phát triển đã sẵn sàng cho việc phát triển các tính năng
 
-3.1.2 Kịch Bản 2 (Thực hiện: Thành viên 2): Thiết kế và triển khai mô hình dữ liệu
+3.1.2 Kịch Bản 2 (Thực hiện: Trần Duy Hảo): Thiết kế và triển khai mô hình dữ liệu và chat
 a. Mô tả chi tiết về tình trạng khi chưa triển khai:
 - Chưa có mô hình dữ liệu
 - Chưa có cơ sở dữ liệu
 - Chưa có các bảng cần thiết
+- Chưa có hệ thống chat
 
 b. Giải pháp: Đưa ra giải pháp để khắc phục
 - Tạo các Django apps: accounts, listings, chat
@@ -138,16 +139,18 @@ b. Giải pháp: Đưa ra giải pháp để khắc phục
 - Tạo migrations: `python manage.py makemigrations`
 - Chạy migrations: `python manage.py migrate`
 - Tạo superuser: `python manage.py createsuperuser`
+- Phát triển chat 1-1 với cơ chế refresh trang
 
 c. Kết quả và phân tích:
 - Các models đã được tạo thành công
 - Database đã được khởi tạo với các bảng cần thiết
 - Admin interface đã được cấu hình
 - Có thể quản lý dữ liệu qua Django admin
+- Chat 1-1 hoạt động với cơ chế refresh trang
 
-d. Kết luận: Mô hình dữ liệu đã được triển khai thành công và sẵn sàng cho việc phát triển các tính năng
+d. Kết luận: Mô hình dữ liệu và chat đã được triển khai thành công và sẵn sàng cho việc phát triển các tính năng
 
-3.1.3 Kịch Bản 3 (Thực hiện: Thành viên 3): Phát triển hệ thống xác thực
+3.1.3 Kịch Bản 3 (Thực hiện: Ngô Thị Tuyết Nhung): Phát triển hệ thống xác thực
 a. Mô tả chi tiết về tình trạng khi chưa triển khai:
 - Chưa có hệ thống đăng ký/đăng nhập
 - Chưa có xác thực OTP
@@ -168,7 +171,7 @@ c. Kết quả và phân tích:
 
 d. Kết luận: Hệ thống xác thực đã được triển khai thành công và đảm bảo bảo mật
 
-3.1.4 Kịch Bản 4 (Thực hiện: Thành viên 4): Phát triển tính năng đăng tin
+3.1.4 Kịch Bản 4 (Thực hiện: Ngô Nguyễn Trường An): Phát triển tính năng đăng tin
 a. Mô tả chi tiết về tình trạng khi chưa triển khai:
 - Chưa có form đăng tin
 - Chưa có upload ảnh
@@ -189,26 +192,27 @@ c. Kết quả và phân tích:
 
 d. Kết luận: Tính năng đăng tin đã được triển khai thành công với đầy đủ chức năng
 
-3.1.5 Kịch Bản 5 (Thực hiện: Thành viên 5): Phát triển tính năng tìm kiếm và chat
+3.1.5 Kịch Bản 5 (Thực hiện: Huỳnh Thị Mỹ Duyên): Phát triển tính năng tìm kiếm và bộ lọc
 a. Mô tả chi tiết về tình trạng khi chưa triển khai:
 - Chưa có tính năng tìm kiếm
-- Chưa có hệ thống chat
-- Chưa có thông báo email
+- Chưa có hệ thống lọc sản phẩm
+- Chưa có sắp xếp kết quả
 
 b. Giải pháp: Đưa ra giải pháp để khắc phục
 - Implement search với Q objects
 - Tạo filter và sort functionality
-- Phát triển chat 1-1 với cơ chế refresh trang
-- Cấu hình chat interface
-- Thêm rate limiting cho chat
+- Phát triển giao diện tìm kiếm thân thiện
+- Thêm pagination cho kết quả
+- Tối ưu hóa hiệu suất truy vấn
 
 c. Kết quả và phân tích:
 - Tìm kiếm hoạt động với nhiều tiêu chí
-- Chat hoạt động với cơ chế refresh trang
-- Chat interface hoạt động mượt mà
-- Rate limiting ngăn chặn spam
+- Bộ lọc hoạt động hiệu quả theo danh mục, giá, tình trạng
+- Sắp xếp kết quả theo giá, thời gian
+- Giao diện tìm kiếm thân thiện và dễ sử dụng
+- Hiệu suất truy vấn được tối ưu hóa
 
-d. Kết luận: Tính năng tìm kiếm và chat đã được triển khai thành công với hiệu suất tốt
+d. Kết luận: Tính năng tìm kiếm và bộ lọc đã được triển khai thành công với hiệu suất tốt
 
 3.1.6 Kịch Bản 6 (Thực hiện: Tất cả thành viên): Testing và tối ưu hóa
 a. Mô tả chi tiết về tình trạng khi chưa triển khai:
