@@ -252,3 +252,2053 @@ PROJECT STATUS
 ✅ Documentation complete
 
 READY FOR: Production deployment, user testing, feature enhancements
+
+UML DIAGRAMS
+============
+
+CLASS DIAGRAM
+-------------
+```mermaid
+classDiagram
+    class User {
+        +int id
+        +str username
+        +str email
+        +str first_name
+        +str last_name
+        +bool is_staff
+        +bool is_active
+        +datetime date_joined
+        +get_full_name()
+        +get_username()
+    }
+
+    class Category {
+        +int id
+        +str name
+        +str slug
+        +__str__()
+    }
+
+    class Listing {
+        +int id
+        +str title
+        +str description
+        +str condition
+        +int price
+        +str currency
+        +str location
+        +str status
+        +datetime created_at
+        +int owner_id
+        +int category_id
+        +get_absolute_url()
+        +get_condition_display()
+    }
+
+    class ListingImage {
+        +int id
+        +int listing_id
+        +str image
+        +str alt_text
+        +__str__()
+    }
+
+    class Conversation {
+        +int id
+        +int listing_id
+        +int buyer_id
+        +int seller_id
+        +datetime created_at
+        +datetime updated_at
+        +is_participant(user)
+        +other_participant(user)
+        +last_message()
+    }
+
+    class Message {
+        +int id
+        +int conversation_id
+        +int sender_id
+        +str body
+        +datetime created_at
+        +datetime read_at
+    }
+
+    User ||--o{ Listing : owns
+    Category ||--o{ Listing : categorizes
+    Listing ||--o{ ListingImage : has
+    Listing ||--o{ Conversation : topic
+    User ||--o{ Conversation : buyer
+    User ||--o{ Conversation : seller
+    Conversation ||--o{ Message : contains
+    User ||--o{ Message : sends
+```
+
+USE CASE DIAGRAM
+----------------
+```mermaid
+graph TB
+    User[👤 User]
+    Admin[👤 Admin]
+    System[🏢 Marketplace System]
+
+    User --> UC1[Đăng ký/Đăng nhập]
+    User --> UC2[Đăng tin rao vặt]
+    User --> UC3[Tìm kiếm sản phẩm]
+    User --> UC4[Lọc sản phẩm]
+    User --> UC5[Xem chi tiết tin]
+    User --> UC6[Nhắn tin với người bán]
+    User --> UC7[Quản lý tin đã đăng]
+    User --> UC8[Chỉnh sửa hồ sơ]
+
+    Admin --> UC9[Duyệt tin đăng]
+    Admin --> UC10[Quản lý danh mục]
+    Admin --> UC11[Quản lý người dùng]
+    Admin --> UC12[Xem báo cáo]
+
+    System --> UC13[Gửi email thông báo]
+    System --> UC14[Rate limiting]
+    System --> UC15[Upload ảnh]
+    System --> UC16[Phân trang]
+
+    UC2 --> UC15
+    UC6 --> UC13
+    UC6 --> UC14
+    UC3 --> UC16
+    UC4 --> UC16
+```
+
+SEQUENCE DIAGRAM - CHAT FLOW
+---------------------------
+```mermaid
+sequenceDiagram
+    participant U1 as User A (Buyer)
+    participant U2 as User B (Seller)
+    participant S as System
+    participant E as Email Service
+
+    U1->>S: Truy cập trang chi tiết tin
+    S-->>U1: Hiển thị tin + nút "Nhắn tin"
+    
+    U1->>S: Click "Nhắn tin với người bán"
+    S->>S: Tạo/find conversation
+    S-->>U1: Redirect to chat thread
+    
+    U1->>S: Gửi tin nhắn
+    S->>S: Validate message
+    S->>S: Save message to DB
+    S->>S: Check rate limit
+    
+    S->>E: Gửi email thông báo
+    E-->>U2: Email: "Tin nhắn mới từ User A"
+    
+    S-->>U1: Hiển thị tin nhắn đã gửi
+    
+    U2->>S: Truy cập chat thread
+    S->>S: Mark messages as read
+    S-->>U2: Hiển thị tin nhắn
+    
+    U2->>S: Trả lời tin nhắn
+    S->>S: Save reply
+    S->>E: Gửi email thông báo
+    E-->>U1: Email: "Tin nhắn mới từ User B"
+```
+
+SEQUENCE DIAGRAM - LISTING PUBLISH FLOW
+---------------------------------------
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant S as System
+    participant A as Admin
+    participant DB as Database
+
+    U->>S: Tạo tin rao vặt mới
+    S->>S: Validate form data
+    S->>S: Upload images
+    S->>DB: Save listing (status=PENDING)
+    S-->>U: Redirect to listing detail
+
+    A->>S: Truy cập admin panel
+    S->>DB: Query pending listings
+    S-->>A: Hiển thị danh sách tin chờ duyệt
+
+    A->>S: Chọn action "Publish"
+    S->>S: publish_listing(listing, admin)
+    S->>DB: Update status to PUBLISHED
+    S-->>A: Thông báo "Đã publish X tin"
+
+    U->>S: Truy cập trang chủ
+    S->>DB: Query published listings
+    S-->>U: Hiển thị tin đã được duyệt
+```
+
+COMPONENT DIAGRAM
+-----------------
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        UI[User Interface]
+        T[Django Templates]
+        S[Static Files]
+        M[Media Files]
+    end
+
+    subgraph "Application Layer"
+        V[Views]
+        F[Forms]
+        SVC[Services]
+        U[URLs]
+    end
+
+    subgraph "Business Logic"
+        M1[Models]
+        AUTH[Authentication]
+        PERM[Permissions]
+        RATE[Rate Limiting]
+    end
+
+    subgraph "Data Layer"
+        DB[(Database)]
+        CACHE[(Cache)]
+        MEDIA[Media Storage]
+    end
+
+    subgraph "External Services"
+        EMAIL[Email Service]
+        SMTP[SMTP Server]
+    end
+
+    UI --> T
+    T --> V
+    V --> F
+    V --> SVC
+    SVC --> M1
+    M1 --> DB
+    SVC --> CACHE
+    V --> AUTH
+    AUTH --> PERM
+    SVC --> RATE
+    SVC --> EMAIL
+    EMAIL --> SMTP
+    V --> MEDIA
+```
+
+ACTIVITY DIAGRAM - USER REGISTRATION
+-----------------------------------
+```mermaid
+flowchart TD
+    Start([Bắt đầu]) --> Form[Hiển thị form đăng ký]
+    Form --> Fill[User điền thông tin]
+    Fill --> Validate{Validate form}
+    Validate -->|Invalid| Error[Hiển thị lỗi]
+    Error --> Fill
+    Validate -->|Valid| Create[Tạo user account]
+    Create --> OTP[Gửi OTP qua email]
+    OTP --> Verify[User nhập OTP]
+    Verify --> Check{OTP đúng?}
+    Check -->|Sai| Retry[Thử lại OTP]
+    Retry --> Verify
+    Check -->|Đúng| Activate[Kích hoạt tài khoản]
+    Activate --> Success[Đăng ký thành công]
+    Success --> End([Kết thúc])
+```
+
+STATE DIAGRAM - LISTING STATUS
+------------------------------
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING : User tạo tin
+    PENDING --> PUBLISHED : Admin duyệt
+    PENDING --> [*] : User xóa tin
+    PUBLISHED --> [*] : User xóa tin
+    PUBLISHED --> PUBLISHED : User chỉnh sửa
+    
+    note right of PENDING
+        Tin chờ duyệt
+        - Không hiển thị công khai
+        - Chỉ owner và admin thấy
+    end note
+    
+    note right of PUBLISHED
+        Tin đã đăng
+        - Hiển thị công khai
+        - Có thể chat
+        - Có thể tìm kiếm
+    end note
+```
+
+PHỤ LỤC (APPENDIX)
+==================
+
+A. CODE SAMPLES
+---------------
+
+A1. Models (listings/models.py)
+```python
+class Listing(models.Model):
+    CONDITION_CHOICES = [("new", "Mới"), ("used", "Đã qua sử dụng")]
+    STATUS_CHOICES = [("PENDING", "Chờ duyệt"), ("PUBLISHED", "Đã đăng")]
+
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES)
+    price = models.IntegerField(db_index=True) 
+    currency = models.CharField(max_length=10, default="VND")
+    location = models.CharField(max_length=200, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDING")
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse("listings:detail", args=[self.pk])
+```
+
+A2. Services (chat/services.py)
+```python
+def create_message(conversation: Conversation, sender, body: str) -> Message:
+    if not conversation.is_participant(sender):
+        raise PermissionError("Sender is not allowed in this conversation.")
+
+    trimmed_body = body.strip()
+    if not trimmed_body:
+        raise ValueError("Message body cannot be empty.")
+
+    rate_key = f"chat:rate:{sender.pk}"
+    if not cache.add(rate_key, timezone.now().isoformat(), RATE_LIMIT_SECONDS):
+        raise RateLimitError("Ban dang gui tin nhan qua nhanh. Thu lai sau giay lat.")
+
+    message = Message.objects.create(
+        conversation=conversation,
+        sender=sender,
+        body=trimmed_body,
+    )
+
+    _maybe_send_new_message_email(message)
+    return message
+```
+
+A3. Views (listings/views.py)
+```python
+@login_required
+def create_listing_view(request):
+    if request.method == 'POST':
+        form = ListingForm(request.POST, request.FILES)
+        if form.is_valid():
+            listing = form.save(commit=False)
+            listing.owner = request.user
+            listing.save()
+            
+            # Handle multiple images
+            for image in request.FILES.getlist('images'):
+                ListingImage.objects.create(listing=listing, image=image)
+            
+            return redirect('listings:detail', pk=listing.pk)
+    else:
+        form = ListingForm()
+    
+    return render(request, 'listings/create.html', {'form': form})
+```
+
+A4. Forms (listings/forms.py)
+```python
+class ListingForm(forms.ModelForm):
+    class Meta:
+        model = Listing
+        fields = ['title', 'description', 'category', 'condition', 'price', 'location']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 4}),
+            'price': forms.NumberInput(attrs={'min': 0}),
+        }
+    
+    def clean_price(self):
+        price = self.cleaned_data.get('price')
+        if price and price < 0:
+            raise forms.ValidationError("Giá không được âm.")
+        return price
+```
+
+A5. Chat Models (chat/models.py)
+```python
+class Conversation(models.Model):
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='conversations')
+    buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='buyer_conversations')
+    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='seller_conversations')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['listing', 'buyer', 'seller']
+        ordering = ['-updated_at']
+
+    def is_participant(self, user):
+        return user in [self.buyer, self.seller]
+
+    def other_participant(self, user):
+        if user == self.buyer:
+            return self.seller
+        elif user == self.seller:
+            return self.buyer
+        else:
+            raise ValueError("User is not a participant in this conversation")
+
+    @property
+    def last_message(self):
+        return self.messages.order_by('-created_at').first()
+
+    @classmethod
+    def for_user(cls, user):
+        return cls.objects.filter(
+            models.Q(buyer=user) | models.Q(seller=user)
+        )
+
+class Message(models.Model):
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Message from {self.sender.username} in conversation {self.conversation.id}"
+```
+
+A6. Chat Views (chat/views.py)
+```python
+@login_required
+def post_message_view(request: HttpRequest, pk: int) -> HttpResponse:
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+
+    conversation = get_object_or_404(
+        Conversation.objects.select_related("listing", "buyer", "seller"),
+        pk=pk,
+    )
+    if not conversation.is_participant(request.user):
+        return HttpResponseForbidden("Ban khong the gui tin trong cuoc tro chuyen nay.")
+
+    form = MessageForm(request.POST)
+    if form.is_valid():
+        try:
+            message = create_message(
+                conversation=conversation,
+                sender=request.user,
+                body=form.cleaned_data["body"],
+            )
+        except RateLimitError as exc:
+            form.add_error(None, str(exc))
+        except ValueError as exc:
+            form.add_error("body", str(exc))
+        except PermissionError as exc:
+            form.add_error(None, str(exc))
+        else:
+            last_ts = timezone.localtime(message.created_at).isoformat()
+            if _is_htmx(request) or _wants_json(request):
+                response = render(
+                    request,
+                    "chat/_message_list.html",
+                    {
+                        "messages": [message],
+                        "conversation": conversation,
+                    },
+                )
+                response.status_code = 201
+                response["X-Last-Timestamp"] = last_ts
+                return response
+            return redirect("chat:thread_detail", pk=conversation.pk)
+
+    if _is_htmx(request) or _wants_json(request):
+        return JsonResponse({"errors": form.errors}, status=400)
+
+    page_obj = _get_messages_page(conversation, request.GET.get("page"))
+    partner = conversation.other_participant(request.user)
+    context = {
+        "conversation": conversation,
+        "partner": partner,
+        "page_obj": page_obj,
+        "messages": page_obj.object_list,
+        "form": form,
+        "last_message_ts": "",
+    }
+    return render(request, "chat/thread_detail.html", context, status=400)
+```
+
+A7. Authentication Views (accounts/views.py)
+```python
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.core.mail import send_mail
+from django.conf import settings
+import random
+import string
+
+def register_view(request):
+    if request.method == 'POST':
+        form = UserRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_active = False
+            user.save()
+            
+            # Generate OTP
+            otp = ''.join(random.choices(string.digits, k=6))
+            request.session['otp'] = otp
+            request.session['user_id'] = user.id
+            
+            # Send OTP email
+            send_mail(
+                'Xác thực tài khoản',
+                f'Mã OTP của bạn là: {otp}',
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+            
+            return redirect('accounts:verify_otp')
+    else:
+        form = UserRegistrationForm()
+    
+    return render(request, 'accounts/register.html', {'form': form})
+
+def verify_otp_view(request):
+    if request.method == 'POST':
+        entered_otp = request.POST.get('otp')
+        stored_otp = request.session.get('otp')
+        
+        if entered_otp == stored_otp:
+            user_id = request.session.get('user_id')
+            user = User.objects.get(id=user_id)
+            user.is_active = True
+            user.save()
+            
+            del request.session['otp']
+            del request.session['user_id']
+            
+            messages.success(request, 'Tài khoản đã được kích hoạt thành công!')
+            return redirect('accounts:login')
+        else:
+            messages.error(request, 'Mã OTP không đúng!')
+    
+    return render(request, 'accounts/verify_otp.html')
+```
+
+A8. Admin Configuration (listings/admin.py)
+```python
+from django.contrib import admin
+from django.utils.html import format_html
+from .models import Category, Listing, ListingImage
+from .services import publish_listing
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'slug')
+    prepopulated_fields = {"slug": ("name",)}
+    search_fields = ('name',)
+
+class ListingImageInline(admin.TabularInline):
+    model = ListingImage
+    extra = 0
+    readonly_fields = ["preview"]
+
+    def preview(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" width="80" />', obj.image.url)
+        return "-"
+    preview.short_description = "Ảnh"
+
+@admin.register(Listing)
+class ListingAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'status', 'category', 'price', 'owner', 'created_at')
+    list_filter = ('status', 'category', 'condition', 'created_at')
+    search_fields = ('title', 'description', 'owner__username')
+    inlines = [ListingImageInline]
+    actions = ['publish_selected']
+
+    def publish_selected(self, request, queryset):
+        count = 0
+        for obj in queryset.filter(status='PENDING'):
+            publish_listing(obj, request.user)
+            count += 1
+        self.message_user(request, f"Đã publish {count} tin.")
+    publish_selected.short_description = "Publish các tin đang PENDING"
+```
+
+A9. URL Configuration (marketplace/urls.py)
+```python
+from django.contrib import admin
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('listings.urls')),
+    path('accounts/', include('accounts.urls')),
+    path('listings/', include('listings.urls')),
+    path('chat/', include('chat.urls')),
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+```
+
+A10. Settings Configuration (marketplace/settings.py)
+```python
+import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key-change-me")
+DEBUG = os.getenv("DJANGO_DEBUG", "1") == "1"
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
+
+INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.humanize",
+    "widget_tweaks",
+    "accounts",
+    "listings",
+    "chat",
+]
+
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+ROOT_URLCONF = "marketplace.urls"
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ]
+        },
+    }
+]
+
+# Database configuration
+DB_ENGINE = os.getenv("DB_ENGINE", "sqlite").lower()
+
+if DB_ENGINE == "mysql":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": os.getenv("DB_NAME", "cs466"),
+            "USER": os.getenv("DB_USER", "root"),
+            "PASSWORD": os.getenv("DB_PASSWORD", "2004"),
+            "HOST": os.getenv("DB_HOST", "127.0.0.1"),
+            "PORT": os.getenv("DB_PORT", "3306"),
+            "OPTIONS": {
+                "charset": "utf8mb4",
+                "init_command": "SET sql_mode='STRICT_TRANS_TABLES', time_zone='+00:00'",
+            },
+        }
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+
+# Media files
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+# Static files
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else []
+
+# Internationalization
+LANGUAGE_CODE = "vi"
+TIME_ZONE = "Asia/Ho_Chi_Minh"
+USE_I18N = True
+USE_TZ = True
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+```
+
+A11. Template Examples (templates/base.html)
+```html
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Marketplace{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'baseCss/home.css' %}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="fas fa-store"></i> Marketplace
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                {% if user.is_authenticated %}
+                    <a class="nav-link" href="{% url 'listings:mine' %}">
+                        <i class="fas fa-list"></i> Tin của tôi
+                    </a>
+                    <a class="nav-link" href="{% url 'chat:threads' %}">
+                        <i class="fas fa-comments"></i> Chat
+                    </a>
+                    <a class="nav-link" href="{% url 'accounts:profile' %}">
+                        <i class="fas fa-user"></i> {{ user.username }}
+                    </a>
+                    <a class="nav-link" href="{% url 'accounts:logout' %}">
+                        <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                    </a>
+                {% else %}
+                    <a class="nav-link" href="{% url 'accounts:login' %}">
+                        <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                    </a>
+                    <a class="nav-link" href="{% url 'accounts:register' %}">
+                        <i class="fas fa-user-plus"></i> Đăng ký
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="bg-dark text-light text-center py-3 mt-5">
+        <p>&copy; 2024 Marketplace. All rights reserved.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+```
+
+A12. JavaScript Examples (static/js/chat.js)
+```javascript
+// Real-time chat functionality
+class ChatManager {
+    constructor(conversationId) {
+        this.conversationId = conversationId;
+        this.lastTimestamp = '';
+        this.pollInterval = 3000; // 3 seconds
+        this.isPolling = false;
+        this.init();
+    }
+
+    init() {
+        this.setupMessageForm();
+        this.startPolling();
+        this.scrollToBottom();
+    }
+
+    setupMessageForm() {
+        const form = document.getElementById('message-form');
+        const textarea = form.querySelector('textarea');
+        
+        if (form && textarea) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.sendMessage(form);
+            });
+
+            textarea.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    form.submit();
+                }
+            });
+        }
+    }
+
+    async sendMessage(form) {
+        const formData = new FormData(form);
+        
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (response.ok) {
+                form.reset();
+                this.scrollToBottom();
+            } else {
+                const errors = await response.json();
+                this.showErrors(errors);
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+        }
+    }
+
+    startPolling() {
+        if (this.isPolling) return;
+        
+        this.isPolling = true;
+        this.pollMessages();
+        
+        setInterval(() => {
+            this.pollMessages();
+        }, this.pollInterval);
+    }
+
+    async pollMessages() {
+        const url = `/chat/${this.conversationId}/poll/?after=${this.lastTimestamp}`;
+        
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.messages && data.messages.length > 0) {
+                    this.appendMessages(data.messages);
+                    this.lastTimestamp = data.last_ts;
+                }
+            }
+        } catch (error) {
+            console.error('Error polling messages:', error);
+        }
+    }
+
+    appendMessages(messages) {
+        const container = document.querySelector('.messages-container');
+        if (!container) return;
+
+        messages.forEach(message => {
+            const messageElement = this.createMessageElement(message);
+            container.appendChild(messageElement);
+        });
+
+        this.scrollToBottom();
+    }
+
+    createMessageElement(message) {
+        const div = document.createElement('div');
+        div.className = `message ${message.is_self ? 'message-sent' : 'message-received'}`;
+        
+        div.innerHTML = `
+            <div class="message-content">
+                <div class="message-body">${this.escapeHtml(message.body)}</div>
+                <div class="message-time">${this.formatTime(message.created_at)}</div>
+            </div>
+        `;
+        
+        return div;
+    }
+
+    scrollToBottom() {
+        const scrollBox = document.getElementById('messages-scroll');
+        if (scrollBox) {
+            scrollBox.scrollTop = scrollBox.scrollHeight;
+        }
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    formatTime(timestamp) {
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    showErrors(errors) {
+        // Display form errors
+        console.error('Form errors:', errors);
+    }
+}
+
+// Initialize chat when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    const conversationId = document.querySelector('[data-conversation-id]')?.dataset.conversationId;
+    if (conversationId) {
+        new ChatManager(conversationId);
+    }
+});
+```
+
+A13. CSS Examples (static/chat/chat.css)
+```css
+/* Chat interface styles */
+.messenger-container {
+    display: flex;
+    height: 100vh;
+    background: #f8f9fa;
+}
+
+.messenger-sidebar {
+    width: 300px;
+    background: white;
+    border-right: 1px solid #e9ecef;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.sidebar-header h4 {
+    margin-bottom: 15px;
+    color: #495057;
+}
+
+.search-box input {
+    border-radius: 20px;
+    border: 1px solid #dee2e6;
+    padding: 8px 15px;
+}
+
+.tabs {
+    display: flex;
+    margin-top: 15px;
+    gap: 10px;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-btn.active {
+    background: #007bff;
+    color: white;
+}
+
+.conversations-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.conversation-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f8f9fa;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.2s;
+}
+
+.conversation-item:hover {
+    background: #f8f9fa;
+}
+
+.conversation-item.active {
+    background: #e3f2fd;
+    border-left: 3px solid #007bff;
+}
+
+.conversation-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 15px;
+}
+
+.conversation-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.conversation-name {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.conversation-preview {
+    color: #6c757d;
+    font-size: 0.9em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.conversation-meta {
+    text-align: right;
+}
+
+.conversation-time {
+    font-size: 0.8em;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.unread-badge {
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.messenger-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    background: white;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.chat-user-info {
+    display: flex;
+    align-items: center;
+}
+
+.user-avatar {
+    margin-right: 15px;
+}
+
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.user-details h6 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.user-details small {
+    color: #6c757d;
+}
+
+.chat-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.action-btn:hover {
+    background: #f8f9fa;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: #f8f9fa;
+}
+
+.message {
+    margin-bottom: 15px;
+    display: flex;
+}
+
+.message-sent {
+    justify-content: flex-end;
+}
+
+.message-received {
+    justify-content: flex-start;
+}
+
+.message-content {
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 18px;
+    position: relative;
+}
+
+.message-sent .message-content {
+    background: #007bff;
+    color: white;
+}
+
+.message-received .message-content {
+    background: white;
+    color: #333;
+    border: 1px solid #e9ecef;
+}
+
+.message-body {
+    margin-bottom: 5px;
+    word-wrap: break-word;
+}
+
+.message-time {
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+.empty-chat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #6c757d;
+}
+
+.empty-icon {
+    font-size: 3em;
+    margin-bottom: 15px;
+}
+
+.chat-input {
+    background: white;
+    padding: 15px 20px;
+    border-top: 1px solid #e9ecef;
+}
+
+.input-group {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.input-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #6c757d;
+    transition: all 0.2s;
+}
+
+.input-btn:hover {
+    background: #f8f9fa;
+    color: #007bff;
+}
+
+.message-input-wrapper {
+    flex: 1;
+}
+
+.message-input-wrapper textarea {
+    width: 100%;
+    border: 1px solid #dee2e6;
+    border-radius: 20px;
+    padding: 10px 15px;
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.message-input-wrapper textarea:focus {
+    border-color: #007bff;
+}
+
+.send-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.send-btn:hover {
+    background: #0056b3;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .messenger-container {
+        flex-direction: column;
+    }
+    
+    .messenger-sidebar {
+        width: 100%;
+        height: auto;
+        max-height: 200px;
+    }
+    
+    .conversations-list {
+        display: flex;
+        overflow-x: auto;
+    }
+    
+    .conversation-item {
+        min-width: 200px;
+        flex-shrink: 0;
+    }
+}
+```
+
+B. DATABASE SCRIPTS
+------------------
+
+B1. SQLite Schema
+```sql
+-- Users table (Django built-in)
+CREATE TABLE auth_user (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username VARCHAR(150) NOT NULL UNIQUE,
+    email VARCHAR(254),
+    first_name VARCHAR(150),
+    last_name VARCHAR(150),
+    is_staff BOOLEAN NOT NULL DEFAULT 0,
+    is_active BOOLEAN NOT NULL DEFAULT 1,
+    date_joined DATETIME NOT NULL
+);
+
+-- Categories
+CREATE TABLE listings_category (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL,
+    slug VARCHAR(100) NOT NULL UNIQUE
+);
+
+-- Listings
+CREATE TABLE listings_listing (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title VARCHAR(200) NOT NULL,
+    description TEXT NOT NULL,
+    condition VARCHAR(20) NOT NULL,
+    price INTEGER NOT NULL,
+    currency VARCHAR(10) NOT NULL DEFAULT 'VND',
+    location VARCHAR(200) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    owner_id INTEGER NOT NULL REFERENCES auth_user(id),
+    category_id INTEGER REFERENCES listings_category(id),
+    created_at DATETIME NOT NULL
+);
+
+-- Indexes
+CREATE INDEX listings_listing_price_idx ON listings_listing(price);
+CREATE INDEX listings_listing_created_at_idx ON listings_listing(created_at);
+CREATE INDEX listings_listing_category_price_idx ON listings_listing(category_id, price);
+```
+
+B2. MySQL Production Schema
+```sql
+CREATE DATABASE IF NOT EXISTS cs466
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_0900_ai_ci;
+
+-- Django migrations will create tables
+-- Key configuration in settings.py:
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "cs466",
+        "USER": "root",
+        "PASSWORD": "2004",
+        "HOST": "127.0.0.1",
+        "PORT": "3306",
+        "OPTIONS": {
+            "charset": "utf8mb4",
+            "init_command": "SET sql_mode='STRICT_TRANS_TABLES', time_zone='+00:00'",
+        },
+    }
+}
+```
+
+C. DEPLOYMENT SCRIPTS
+--------------------
+
+C1. Setup Script (setup.bat)
+```batch
+@echo off
+echo Setting up Marketplace Project...
+
+REM Create virtual environment
+python -m venv .venv
+call .venv\Scripts\activate.bat
+
+REM Upgrade pip and install dependencies
+python -m pip install -U pip setuptools wheel
+python -m pip install -r requirements.txt
+
+REM Run migrations
+python manage.py migrate
+
+REM Create superuser
+echo Creating superuser...
+set DJANGO_SUPERUSER_USERNAME=admin
+set DJANGO_SUPERUSER_EMAIL=admin@example.com
+set DJANGO_SUPERUSER_PASSWORD=Admin@12345
+python manage.py createsuperuser --noinput
+
+echo Setup complete! Run 'python manage.py runserver' to start.
+pause
+```
+
+C2. Production Deployment (deploy.sh)
+```bash
+#!/bin/bash
+# Production deployment script
+
+# Environment setup
+export DB_ENGINE=mysql
+export DB_NAME=cs466
+export DB_USER=marketplace_user
+export DB_PASSWORD=secure_password
+export DB_HOST=localhost
+export DB_PORT=3306
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Database migrations
+python manage.py migrate
+
+# Collect static files
+python manage.py collectstatic --noinput
+
+# Create superuser (if needed)
+python manage.py createsuperuser --noinput \
+    --username admin \
+    --email admin@company.com
+
+# Start server
+gunicorn marketplace.wsgi:application --bind 0.0.0.0:8000
+```
+
+D. TEST SCRIPTS
+---------------
+
+D1. Test Data Generator (generate_test_data.py)
+```python
+import os
+import django
+from django.conf import settings
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'marketplace.settings')
+django.setup()
+
+from django.contrib.auth.models import User
+from listings.models import Category, Listing, ListingImage
+from chat.models import Conversation, Message
+import random
+from datetime import datetime, timedelta
+
+def create_test_data():
+    # Create test users
+    users = []
+    for i in range(10):
+        user, created = User.objects.get_or_create(
+            username=f'user{i}',
+            defaults={
+                'email': f'user{i}@test.com',
+                'first_name': f'User{i}',
+                'last_name': 'Test'
+            }
+        )
+        users.append(user)
+    
+    # Create categories
+    categories = ['Điện tử', 'Thời trang', 'Gia dụng', 'Sách', 'Thể thao']
+    for cat_name in categories:
+        Category.objects.get_or_create(
+            name=cat_name,
+            defaults={'slug': cat_name.lower().replace(' ', '-')}
+        )
+    
+    # Create listings
+    for i in range(50):
+        listing = Listing.objects.create(
+            title=f'Sản phẩm test {i}',
+            description=f'Mô tả chi tiết cho sản phẩm {i}',
+            category=Category.objects.order_by('?').first(),
+            condition=random.choice(['new', 'used']),
+            price=random.randint(10000, 1000000),
+            location=f'Địa điểm {i}',
+            status=random.choice(['PENDING', 'PUBLISHED']),
+            owner=random.choice(users),
+            created_at=datetime.now() - timedelta(days=random.randint(1, 30))
+        )
+    
+    print("Test data created successfully!")
+
+if __name__ == '__main__':
+    create_test_data()
+```
+
+D2. Performance Test (performance_test.py)
+```python
+import time
+import requests
+from concurrent.futures import ThreadPoolExecutor
+
+def test_endpoint(url, iterations=100):
+    """Test endpoint performance"""
+    start_time = time.time()
+    success_count = 0
+    
+    for _ in range(iterations):
+        try:
+            response = requests.get(url, timeout=10)
+            if response.status_code == 200:
+                success_count += 1
+        except:
+            pass
+    
+    end_time = time.time()
+    duration = end_time - start_time
+    
+    return {
+        'url': url,
+        'iterations': iterations,
+        'success_count': success_count,
+        'duration': duration,
+        'avg_response_time': duration / iterations
+    }
+
+def run_performance_tests():
+    base_url = 'http://127.0.0.1:8000'
+    endpoints = [
+        f'{base_url}/',
+        f'{base_url}/listings/',
+        f'{base_url}/chat/',
+    ]
+    
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        results = list(executor.map(test_endpoint, endpoints))
+    
+    for result in results:
+        print(f"URL: {result['url']}")
+        print(f"Success Rate: {result['success_count']}/{result['iterations']}")
+        print(f"Avg Response Time: {result['avg_response_time']:.3f}s")
+        print("-" * 50)
+
+if __name__ == '__main__':
+    run_performance_tests()
+```
+
+E. CONFIGURATION FILES
+----------------------
+
+E1. Requirements (requirements.txt)
+```
+Django>=5.0,<6.0
+Pillow>=10.0.0
+pytest>=8.0.0
+pytest-django>=4.8.0
+django-widget-tweaks>=1.5.0
+mysqlclient>=2.2.0
+python-dotenv>=1.0.0
+```
+
+E2. Environment Variables (.env.example)
+```
+# Django Settings
+DJANGO_SECRET_KEY=your-secret-key-here
+DJANGO_DEBUG=1
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Database Configuration
+DB_ENGINE=sqlite
+DB_NAME=db.sqlite3
+DB_USER=root
+DB_PASSWORD=your-password
+DB_HOST=127.0.0.1
+DB_PORT=3306
+
+# Email Configuration
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your-app-password
+DEFAULT_FROM_EMAIL=your-email@gmail.com
+```
+
+E3. Pytest Configuration (pytest.ini)
+```
+[tool:pytest]
+DJANGO_SETTINGS_MODULE = marketplace.settings
+python_files = tests.py test_*.py *_tests.py
+addopts = --tb=short --strict-markers
+markers =
+    slow: marks tests as slow (deselect with '-m "not slow"')
+    integration: marks tests as integration tests
+```
+
+F. API DOCUMENTATION
+--------------------
+
+F1. REST API Endpoints (if implemented)
+```python
+# API Views Example
+from rest_framework import viewsets, permissions
+from rest_framework.decorators import action
+from .models import Listing
+from .serializers import ListingSerializer
+
+class ListingViewSet(viewsets.ModelViewSet):
+    queryset = Listing.objects.filter(status='PUBLISHED')
+    serializer_class = ListingSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    
+    @action(detail=True, methods=['post'])
+    def start_conversation(self, request, pk=None):
+        listing = self.get_object()
+        # Start conversation logic
+        return Response({'conversation_id': conversation.id})
+```
+
+F2. API Response Examples
+```json
+// GET /api/listings/
+{
+    "count": 25,
+    "next": "http://api/listings/?page=2",
+    "previous": null,
+    "results": [
+        {
+            "id": 1,
+            "title": "iPhone 13 Pro",
+            "description": "Máy còn mới 99%",
+            "price": 20000000,
+            "currency": "VND",
+            "condition": "new",
+            "status": "PUBLISHED",
+            "owner": {
+                "id": 1,
+                "username": "seller1",
+                "first_name": "John"
+            },
+            "category": {
+                "id": 1,
+                "name": "Điện tử",
+                "slug": "dien-tu"
+            },
+            "images": [
+                {
+                    "id": 1,
+                    "image": "/media/listings/1/abc123.jpg",
+                    "alt_text": "iPhone 13 Pro front"
+                }
+            ],
+            "created_at": "2024-01-15T10:30:00Z"
+        }
+    ]
+}
+```
+
+G. SECURITY CONFIGURATION
+--------------------------
+
+G1. Security Headers (settings.py)
+```python
+# Security settings
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# CSRF settings
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+```
+
+G2. File Upload Security
+```python
+# File upload validation
+ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
+
+def validate_image_upload(file):
+    if file.size > MAX_IMAGE_SIZE:
+        raise ValidationError("File quá lớn. Tối đa 5MB.")
+    
+    ext = os.path.splitext(file.name)[1].lower()
+    if ext not in ALLOWED_IMAGE_EXTENSIONS:
+        raise ValidationError("Định dạng file không được hỗ trợ.")
+```
+
+H. MONITORING & LOGGING
+-----------------------
+
+H1. Logging Configuration
+```python
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'marketplace.log',
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'marketplace': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
+```
+
+H2. Health Check Endpoint
+```python
+# health_check.py
+from django.http import JsonResponse
+from django.db import connection
+from django.core.cache import cache
+
+def health_check(request):
+    """System health check endpoint"""
+    status = {
+        'status': 'healthy',
+        'timestamp': timezone.now().isoformat(),
+        'checks': {}
+    }
+    
+    # Database check
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        status['checks']['database'] = 'ok'
+    except Exception as e:
+        status['checks']['database'] = f'error: {str(e)}'
+        status['status'] = 'unhealthy'
+    
+    # Cache check
+    try:
+        cache.set('health_check', 'ok', 10)
+        cache.get('health_check')
+        status['checks']['cache'] = 'ok'
+    except Exception as e:
+        status['checks']['cache'] = f'error: {str(e)}'
+        status['status'] = 'unhealthy'
+    
+    return JsonResponse(status)
+```
+
+I. BACKUP & RECOVERY
+--------------------
+
+I1. Database Backup Script (backup.py)
+```python
+import os
+import subprocess
+from datetime import datetime
+
+def backup_database():
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    backup_file = f'backup_{timestamp}.sql'
+    
+    # SQLite backup
+    if os.getenv('DB_ENGINE') == 'sqlite':
+        db_path = os.getenv('DB_NAME', 'db.sqlite3')
+        subprocess.run(['sqlite3', db_path, '.backup', backup_file])
+    
+    # MySQL backup
+    else:
+        cmd = [
+            'mysqldump',
+            '-h', os.getenv('DB_HOST', 'localhost'),
+            '-u', os.getenv('DB_USER', 'root'),
+            f'-p{os.getenv("DB_PASSWORD", "")}',
+            os.getenv('DB_NAME', 'cs466')
+        ]
+        with open(backup_file, 'w') as f:
+            subprocess.run(cmd, stdout=f)
+    
+    print(f"Backup created: {backup_file}")
+
+if __name__ == '__main__':
+    backup_database()
+```
+
+I2. Media Files Backup
+```bash
+#!/bin/bash
+# backup_media.sh
+
+BACKUP_DIR="backups/$(date +%Y%m%d_%H%M%S)"
+mkdir -p "$BACKUP_DIR"
+
+# Copy media files
+cp -r media/ "$BACKUP_DIR/"
+
+# Create archive
+tar -czf "media_backup_$(date +%Y%m%d_%H%M%S).tar.gz" "$BACKUP_DIR"
+
+echo "Media backup completed"
+```
+
+J. PERFORMANCE OPTIMIZATION
+---------------------------
+
+J1. Database Query Optimization
+```python
+# Optimized queries
+def get_listings_with_optimization():
+    return Listing.objects.select_related('owner', 'category')\
+        .prefetch_related('images')\
+        .filter(status='PUBLISHED')\
+        .order_by('-created_at')
+
+def get_conversations_with_messages(user):
+    return Conversation.objects.for_user(user)\
+        .select_related('listing', 'buyer', 'seller')\
+        .prefetch_related('messages__sender')\
+        .annotate(last_message_at=Max('messages__created_at'))
+```
+
+J2. Caching Strategy
+```python
+from django.core.cache import cache
+from django.core.cache.utils import make_template_fragment_key
+
+def get_cached_categories():
+    categories = cache.get('categories')
+    if not categories:
+        categories = list(Category.objects.all())
+        cache.set('categories', categories, 3600)  # 1 hour
+    return categories
+
+def invalidate_listing_cache(listing_id):
+    cache.delete(f'listing_{listing_id}')
+    cache.delete('categories')  # Invalidate category cache
+```
+
+K. ERROR HANDLING
+-----------------
+
+K1. Custom Exception Classes
+```python
+class MarketplaceException(Exception):
+    """Base exception for marketplace"""
+    pass
+
+class ListingNotFound(MarketplaceException):
+    """Listing not found"""
+    pass
+
+class ConversationPermissionDenied(MarketplaceException):
+    """User not allowed in conversation"""
+    pass
+
+class RateLimitExceeded(MarketplaceException):
+    """Rate limit exceeded"""
+    pass
+```
+
+K2. Error Handling Middleware
+```python
+class ErrorHandlingMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        return response
+
+    def process_exception(self, request, exception):
+        if isinstance(exception, MarketplaceException):
+            return JsonResponse({
+                'error': str(exception),
+                'type': exception.__class__.__name__
+            }, status=400)
+        return None
+```
+
+L. DOCUMENTATION TEMPLATES
+--------------------------
+
+L1. API Documentation Template
+```markdown
+# API Endpoints
+
+## Authentication
+- **POST** `/accounts/login/` - User login
+- **POST** `/accounts/register/` - User registration
+
+## Listings
+- **GET** `/listings/` - List all published listings
+- **POST** `/listings/create/` - Create new listing
+- **GET** `/listings/{id}/` - Get listing details
+- **PUT** `/listings/{id}/edit/` - Update listing
+- **DELETE** `/listings/{id}/delete/` - Delete listing
+
+## Chat
+- **GET** `/chat/` - List conversations
+- **GET** `/chat/{id}/` - Get conversation details
+- **POST** `/chat/{id}/send/` - Send message
+- **GET** `/chat/start/{listing_id}/{user_id}/` - Start conversation
+```
+
+L2. User Manual Template
+```markdown
+# Hướng dẫn sử dụng
+
+## Đăng ký tài khoản
+1. Truy cập trang đăng ký
+2. Điền thông tin cá nhân
+3. Xác thực email
+4. Đăng nhập
+
+## Đăng tin rao vặt
+1. Đăng nhập vào hệ thống
+2. Click "Đăng tin mới"
+3. Điền thông tin sản phẩm
+4. Upload ảnh
+5. Gửi để chờ duyệt
+
+## Tìm kiếm sản phẩm
+1. Sử dụng thanh tìm kiếm
+2. Lọc theo danh mục
+3. Sắp xếp theo giá
+4. Xem chi tiết sản phẩm
+```
+
+M. STATISTICS & ANALYTICS
+-------------------------
+
+M1. Analytics Queries
+```python
+def get_system_statistics():
+    return {
+        'total_users': User.objects.count(),
+        'total_listings': Listing.objects.count(),
+        'published_listings': Listing.objects.filter(status='PUBLISHED').count(),
+        'pending_listings': Listing.objects.filter(status='PENDING').count(),
+        'total_conversations': Conversation.objects.count(),
+        'total_messages': Message.objects.count(),
+        'active_users_today': User.objects.filter(
+            last_login__date=timezone.now().date()
+        ).count(),
+    }
+
+def get_category_statistics():
+    return Category.objects.annotate(
+        listing_count=Count('listing')
+    ).order_by('-listing_count')
+```
+
+M2. Usage Reports
+```python
+def generate_usage_report():
+    report = {
+        'date': timezone.now().date(),
+        'new_listings_today': Listing.objects.filter(
+            created_at__date=timezone.now().date()
+        ).count(),
+        'messages_sent_today': Message.objects.filter(
+            created_at__date=timezone.now().date()
+        ).count(),
+        'top_categories': get_category_statistics()[:5],
+    }
+    return report
+```
+
+
+ERD (Entity-Relationship Diagram)
+---------------------------------
+
+ASCII overview
+--------------
+
+  [auth_user]
+    - id (PK)
+    - username, email, ...
+
+  [category]
+    - id (PK)
+    - name, slug (unique)
+
+  [listing]
+    - id (PK)
+    - title, description, condition, price, currency, location, status
+    - owner_id (FK -> auth_user.id)
+    - category_id (FK -> category.id)
+
+  [listingimage]
+    - id (PK)
+    - listing_id (FK -> listing.id)
+    - image, alt_text
+
+  [conversation]
+    - id (PK)
+    - listing_id (FK -> listing.id)
+    - buyer_id (FK -> auth_user.id)
+    - seller_id (FK -> auth_user.id)
+
+  [message]
+    - id (PK)
+    - conversation_id (FK -> conversation.id)
+    - sender_id (FK -> auth_user.id)
+    - body, created_at, read_at
+
+Relationships
+-------------
+  auth_user 1 —— N listing        (owner)
+  category  1 —— N listing        (category)
+  listing   1 —— N listingimage   (images)
+  listing   1 —— N conversation   (topic per listing)
+  auth_user 1 —— N conversation   (as buyer)
+  auth_user 1 —— N conversation   (as seller)
+  conversation 1 —— N message     (messages in thread)
+  auth_user 1 —— N message        (as sender)
+
+Mermaid (renderable)
+--------------------
+```mermaid
+erDiagram
+  auth_user ||--o{ listing : owns
+  category ||--o{ listing : categorizes
+  listing ||--o{ listingimage : has
+  listing ||--o{ conversation : topic
+  auth_user ||--o{ conversation : buyer
+  auth_user ||--o{ conversation : seller
+  conversation ||--o{ message : contains
+  auth_user ||--o{ message : sends
+
+  auth_user {
+    int id PK
+    varchar username
+    varchar email
+  }
+  category {
+    int id PK
+    varchar name
+    varchar slug UNIQUE
+  }
+  listing {
+    int id PK
+    varchar title
+    text description
+    varchar condition
+    int price
+    varchar currency
+    varchar location
+    varchar status
+    int owner_id FK
+    int category_id FK
+  }
+  listingimage {
+    int id PK
+    int listing_id FK
+    varchar image
+    varchar alt_text
+  }
+  conversation {
+    int id PK
+    int listing_id FK
+    int buyer_id FK
+    int seller_id FK
+  }
+  message {
+    int id PK
+    int conversation_id FK
+    int sender_id FK
+    text body
+    datetime created_at
+    datetime read_at
+  }
+```
